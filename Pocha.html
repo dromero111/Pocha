@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c2d21">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Pocha con baraja española para jugar con amigos desde el móvil o contra la máquina.">
+<title>Pocha</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='%23e9b82e' stroke='%237a5200' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='5' fill='%232b58a0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700;800&family=Alegreya+Sans:wght@400;500;700;800&display=swap">
+<style>
+/* Mesa de bar: tapete verde de paño, canto de madera, naipes de baraja española en crema. Una sola columna pensada para el móvil. */
+:root{
+  --felt:#13402f; --felt-deep:#0c2d21; --felt-line:#24604a;
+  --wood:#4a2c1a; --ink:#f4edd9; --muted:#a8c2b2;
+  --card:#fbf6e8; --card-edge:#d9ccae; --card-ink:#2b2117;
+  --brass:#e3b54a; --brass-ink:#2a1d07;
+  --bad:#f08a6c; --good:#92d6a4;
+  --oros:#b8820f; --copas:#bf3a2b; --espadas:#2b58a0; --bastos:#2e7a3c;
+  --display:"Alegreya SC", Georgia, "Times New Roman", serif;
+  --body:"Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+html,body{min-height:100%}
+body{margin:0;-webkit-text-size-adjust:100%}
+body{background:var(--felt-deep);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;
+  background-image:radial-gradient(ellipse at 50% 20%, var(--felt) 0%, var(--felt-deep) 75%);background-attachment:fixed}
+.wrap{max-width:560px;margin:0 auto;padding-block:14px 40px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:2.6rem;line-height:1;color:var(--brass)}
+h2{font-size:1.35rem}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.label{font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700}
+.panel{background:color-mix(in srgb, var(--felt-deep) 70%, transparent);border:1px solid var(--felt-line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grow{flex:1 1 auto;min-width:0}
+label.field{display:flex;flex-direction:column;gap:5px;flex:1 1 150px;min-width:0}
+input[type=text],select{font:inherit;color:var(--ink);background:var(--felt-deep);border:1px solid var(--felt-line);border-radius:10px;padding:11px 12px;width:100%}
+input[type=text]:focus,select:focus,button:focus-visible,.card:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+button{font:inherit;font-weight:800;cursor:pointer;border-radius:10px;border:1px solid var(--felt-line);background:transparent;color:var(--ink);padding:11px 16px;min-height:44px}
+button.primary{background:var(--brass);color:var(--brass-ink);border-color:var(--brass)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.link{border:none;padding:6px 8px;min-height:0;color:var(--muted);font-weight:700;text-decoration:underline}
+.check{display:flex;gap:10px;align-items:flex-start}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--brass)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom, 0px));background:var(--card);color:var(--card-ink);padding:10px 16px;border-radius:10px;font-weight:700;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgb(0 0 0 / .4);z-index:30}
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;flex:none}
+.dot.on{background:var(--good)}
+.dot.off{background:var(--bad)}
+
+/* Cabecera */
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-family:var(--display);color:var(--brass);font-size:1.4rem}
+
+/* Sala */
+.seats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.seats li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--felt-deep)}
+.seats li .n{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:700}
+.tag{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:999px;background:var(--felt-line);color:var(--ink)}
+.tag.brass{background:var(--brass);color:var(--brass-ink)}
+
+/* Marcador de jugadores */
+.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
+.pl{border:1px solid var(--felt-line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0;background:color-mix(in srgb, var(--felt-deep) 60%, transparent)}
+.pl.turn{border-color:var(--brass);box-shadow:0 0 0 2px color-mix(in srgb, var(--brass) 45%, transparent)}
+.pl.me{background:color-mix(in srgb, var(--felt-line) 55%, transparent)}
+.pl .nm{font-weight:800;display:flex;gap:6px;align-items:center;min-width:0}
+.pl .nm span.t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.pl .bw{font-size:.86rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.pl .bw b{color:var(--ink)}
+.pl .bw b.hit{color:var(--good)}
+.pl .bw b.over{color:var(--bad)}
+.pl .pts{font-family:var(--display);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.pl .da{font-size:.66rem;font-weight:800;background:var(--wood);color:var(--ink);border-radius:4px;padding:1px 5px;flex:none}
+
+/* Mesa */
+.roundbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.trump{display:flex;align-items:center;gap:10px}
+.table{min-height:150px;border-radius:18px;border:6px solid var(--wood);background:radial-gradient(circle at 50% 40%, var(--felt) 0%, var(--felt-deep) 100%);padding:14px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;box-shadow:inset 0 0 30px rgb(0 0 0 / .35)}
+.played{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.played .slot{display:flex;flex-direction:column;align-items:center;gap:4px;max-width:70px}
+.played .slot .who{font-size:.76rem;color:var(--muted);max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.played .slot.win .who{color:var(--brass);font-weight:800}
+.status{font-weight:800;text-align:center;font-size:1.05rem;text-wrap:balance}
+.status.mine{color:var(--brass)}
+
+/* Naipes */
+.card{--w:58px;width:var(--w);height:calc(var(--w)*1.5);background:var(--card);color:var(--card-ink);border:1px solid var(--card-edge);border-radius:7px;position:relative;flex:none;box-shadow:0 2px 4px rgb(0 0 0 / .35);display:flex;align-items:center;justify-content:center;padding:0;min-height:0;font-family:var(--display);transition:transform .12s ease}
+.card .rk{position:absolute;top:3px;left:5px;font-size:calc(var(--w)*.27);line-height:1;font-weight:800}
+.card .rk.b{top:auto;left:auto;bottom:3px;right:5px;transform:rotate(180deg)}
+.card svg.face{position:absolute;inset:0;width:100%;height:100%}
+.card svg.pip{width:62%;height:auto}
+.card svg text{font-family:var(--display);font-weight:800}
+.card[data-s=O]{color:var(--oros)} .card[data-s=C]{color:var(--copas)} .card[data-s=E]{color:var(--espadas)} .card[data-s=B]{color:var(--bastos)}
+.card.sm{--w:40px}
+.card.lg{--w:64px}
+.card.trumpcard{box-shadow:0 0 0 2px var(--brass),0 2px 4px rgb(0 0 0 / .35)}
+.hand{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+button.card{cursor:pointer}
+button.card.ok:hover{transform:translateY(-4px)}
+button.card.ok{box-shadow:0 0 0 2px var(--brass),0 3px 8px rgb(0 0 0 / .4)}
+button.card.no{opacity:.45;filter:saturate(.6)}
+button.card:disabled{opacity:1;cursor:default}
+button.card.no:disabled{opacity:.45}
+button.card.sent{transform:translateY(-10px);opacity:.6}
+
+/* Pedir bazas */
+.bids{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px}
+.bids button{font-family:var(--display);font-size:1.3rem;padding:8px 0}
+
+table.score{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.9rem}
+.scorewrap{overflow-x:auto}
+table.score th,table.score td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--felt-line);white-space:nowrap}
+table.score th:first-child,table.score td:first-child{text-align:left}
+table.score thead th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+table.score td .bw{color:var(--muted);font-size:.78rem;margin-right:4px}
+table.score .neg{color:var(--bad)} table.score .pos{color:var(--good)}
+table.score tfoot td{font-weight:800;font-family:var(--display);font-size:1.05rem;border-bottom:none}
+.podium{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.podium li{display:flex;gap:10px;align-items:baseline;padding:8px 10px;border-radius:10px;background:var(--felt-deep)}
+.podium li:first-child{background:var(--brass);color:var(--brass-ink)}
+.podium .pos{font-family:var(--display);font-size:1.3rem;width:1.6em}
+.podium .n{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:800}
+.podium .p{font-family:var(--display);font-size:1.2rem;font-variant-numeric:tabular-nums}
+details.rules summary{cursor:pointer;font-weight:800}
+details.rules ul{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.suits{display:flex;gap:6px}
+@media (prefers-reduced-motion: reduce){.card{transition:none}}
+@media (max-width:380px){.card{--w:50px}.card.sm{--w:36px}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- Oros: moneda de oro con roseta -->
+    <symbol id="s-O" viewBox="0 0 40 40">
+      <circle cx="20" cy="20" r="18" fill="#e9b82e" stroke="#7a5200" stroke-width="1.4"/>
+      <circle cx="20" cy="20" r="13.5" fill="#f4cf55" stroke="#7a5200" stroke-width="1"/>
+      <g fill="#c0392b"><circle cx="20" cy="12" r="2.6"/><circle cx="20" cy="28" r="2.6"/><circle cx="12" cy="20" r="2.6"/><circle cx="28" cy="20" r="2.6"/><circle cx="14.3" cy="14.3" r="2.1"/><circle cx="25.7" cy="14.3" r="2.1"/><circle cx="14.3" cy="25.7" r="2.1"/><circle cx="25.7" cy="25.7" r="2.1"/></g>
+      <circle cx="20" cy="20" r="4" fill="#2b58a0" stroke="#7a5200" stroke-width=".8"/>
+      <g stroke="#7a5200" stroke-width=".7"><path d="M20 2.5v3M20 34.5v3M2.5 20h3M34.5 20h3"/></g>
+    </symbol>
+    <!-- Copas: cáliz -->
+    <symbol id="s-C" viewBox="0 0 40 40">
+      <path d="M7 5.5h26c0 10-5.5 15.5-13 16.5C12.5 21 7 15.5 7 5.5z" fill="#e9b82e" stroke="#7a5200" stroke-width="1.2"/>
+      <ellipse cx="20" cy="5.5" rx="13" ry="2.6" fill="#c0392b" stroke="#7a5200" stroke-width="1"/>
+      <path d="M9.5 10.5h21" stroke="#c0392b" stroke-width="2.2"/>
+      <rect x="18" y="21.5" width="4" height="8" fill="#e9b82e" stroke="#7a5200" stroke-width=".9"/>
+      <ellipse cx="20" cy="25" rx="3.6" ry="2" fill="#c0392b" stroke="#7a5200" stroke-width=".8"/>
+      <path d="M10 37.5c1-5 6-8 10-8s9 3 10 8z" fill="#e9b82e" stroke="#7a5200" stroke-width="1.1"/>
+      <path d="M13 35h14" stroke="#c0392b" stroke-width="1.6"/>
+    </symbol>
+    <!-- Espadas: espada recta con gavilanes -->
+    <symbol id="s-E" viewBox="0 0 40 40">
+      <path d="M20 1.5l3 4.5v22.5h-6V6z" fill="#a9c1e3" stroke="#1f3f78" stroke-width="1"/>
+      <path d="M20 6v22" stroke="#1f3f78" stroke-width=".7"/>
+      <path d="M8 28.5h24v3H8z" fill="#e9b82e" stroke="#7a5200" stroke-width=".9"/>
+      <circle cx="8" cy="30" r="2.4" fill="#c0392b" stroke="#7a5200" stroke-width=".7"/>
+      <circle cx="32" cy="30" r="2.4" fill="#c0392b" stroke="#7a5200" stroke-width=".7"/>
+      <rect x="18" y="31.5" width="4" height="5" fill="#2b58a0" stroke="#1f3f78" stroke-width=".7"/>
+      <circle cx="20" cy="37.8" r="2" fill="#e9b82e" stroke="#7a5200" stroke-width=".7"/>
+    </symbol>
+    <!-- Bastos: garrote nudoso -->
+    <symbol id="s-B" viewBox="0 0 40 40">
+      <path d="M13 6.5c2-4.5 11-5 13 0 1 2.5 0 5-.8 7l-2.4 22c-.2 2-1.4 3-2.8 3s-2.6-1-2.8-3L14.6 13.5c-1.2-2-2.4-4.4-1.6-7z" fill="#4e9a57" stroke="#1f5a2a" stroke-width="1.1"/>
+      <g fill="#4e9a57" stroke="#1f5a2a" stroke-width="1"><path d="M15 15.5c-3-.5-4.5 1.5-3.2 3.3 1 1.2 3 .9 3.8-.3"/><path d="M24.6 20c3-.6 4.4 1.4 3.2 3.2-1 1.2-3 .9-3.8-.3"/><path d="M16.2 26c-2.6-.4-3.8 1.3-2.7 2.8.9 1 2.6.8 3.2-.2"/></g>
+      <g fill="#8a5a2b"><circle cx="20" cy="8" r="1.3"/><circle cx="17.5" cy="11.5" r="1"/><circle cx="22.3" cy="11" r="1"/></g>
+      <path d="M17.9 31h4.4" stroke="#c0392b" stroke-width="2.4"/>
+    </symbol>
+    <!-- Figuras -->
+    <symbol id="f-r" viewBox="0 0 30 34">
+      <path d="M5 13l3 -8 4 5 3 -7 3 7 4 -5 3 8z" fill="#e9b82e" stroke="#7a5200" stroke-width=".9"/>
+      <circle cx="15" cy="3" r="1.4" fill="#c0392b"/>
+      <circle cx="15" cy="18" r="4.6" fill="#f2d2ae" stroke="#6b4a2a" stroke-width=".7"/>
+      <path d="M11 20.5c1 3 7 3 8 0" fill="#d9d2c0" stroke="#6b4a2a" stroke-width=".6"/>
+      <path d="M5 34c0-6 4-10 10-10s10 4 10 10z" fill="#c0392b" stroke="#6b2018" stroke-width=".8"/>
+      <path d="M15 24v10" stroke="#e9b82e" stroke-width="1.6"/>
+    </symbol>
+    <symbol id="f-c" viewBox="0 0 30 34">
+      <path d="M6 33c1-7 2-12 6-16 3-3 4-7 4-10 4 1 7 4 8 8l-2 2c-1-1-2-1-3 0 2 4 3 10 3 16z" fill="#d9a066" stroke="#5a3a1a" stroke-width=".9"/>
+      <path d="M16 7c-2-2-3-4-2-6 2 1 3 3 3 5z" fill="#d9a066" stroke="#5a3a1a" stroke-width=".7"/>
+      <path d="M12 17c-2 3-4 6-6 7" stroke="#5a3a1a" stroke-width="1.6" fill="none"/>
+      <circle cx="19.5" cy="12" r="1" fill="#2b2117"/>
+      <path d="M13 22h8" stroke="#2b58a0" stroke-width="2.4"/>
+    </symbol>
+    <symbol id="f-s" viewBox="0 0 30 34">
+      <path d="M8 11c0-4 3-6 7-6s7 2 7 6z" fill="#2b58a0" stroke="#1f3f78" stroke-width=".8"/>
+      <path d="M21 8c3-4 6-5 7-4-2 1-4 3-6 6z" fill="#c0392b" stroke="#6b2018" stroke-width=".6"/>
+      <circle cx="15" cy="15.5" r="4.5" fill="#f2d2ae" stroke="#6b4a2a" stroke-width=".7"/>
+      <path d="M6 34c0-6 4-11 9-11s9 5 9 11z" fill="#3f8f4a" stroke="#1f5a2a" stroke-width=".8"/>
+      <path d="M9 27h12" stroke="#e9b82e" stroke-width="1.4"/>
+    </symbol>
+  </defs>
+</svg>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(() => {
+"use strict";
+/* ---------- Utilidades ---------- */
+const app = document.getElementById("app");
+const toastEl = document.getElementById("toast");
+let toastT = null;
+function toast(msg){ toastEl.textContent = msg; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(()=>{toastEl.hidden = true;}, 2800); }
+const ls = {
+  get(k){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+function h(tag, props, ...kids){
+  const el = document.createElement(tag);
+  if (props) for (const [k,v] of Object.entries(props)){
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "html") el.innerHTML = v; // solo SVG propio
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()){ if (c == null || c === false) continue; el.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return el;
+}
+function cleanName(s){ return String(s||"").replace(/[\u0000-\u001f\u007f-\u009f­​-‏‪-‮⁠-⁯﻿]/g,"").trim().slice(0,14) || "Jugador"; }
+function randId(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+
+/* ---------- Baraja ---------- */
+const SUITS = ["O","C","E","B"];
+const RANKS = ["1","2","3","4","5","6","7","s","c","r"];
+const POW = {"1":10,"3":9,"r":8,"c":7,"s":6,"7":5,"6":4,"5":3,"4":2,"2":1};
+const RLABEL = {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","s":"10","c":"11","r":"12"};
+const RNAME = {"1":"As","2":"Dos","3":"Tres","4":"Cuatro","5":"Cinco","6":"Seis","7":"Siete","s":"Sota","c":"Caballo","r":"Rey"};
+const SNAME = {O:"oros",C:"copas",E:"espadas",B:"bastos"};
+const SVG = {}; for (const s of ["O","C","E","B"]) SVG[s] = '<svg class="pip" viewBox="0 0 40 40" aria-hidden="true"><use href="#s-' + s + '"/></svg>';
+const SCOL = {O:"#a87a0c", C:"#b8352a", E:"#2b58a0", B:"#2e7a3c"};
+const GAPS = {O:0, C:1, E:2, B:3}; // las pausas del marco que identifican el palo
+const PIPS = {
+  2:[[.5,.2],[.5,.8]], 3:[[.5,.15],[.5,.5],[.5,.85]],
+  4:[[.25,.18],[.75,.18],[.25,.82],[.75,.82]], 5:[[.25,.18],[.75,.18],[.5,.5],[.25,.82],[.75,.82]],
+  6:[[.25,.15],[.75,.15],[.25,.5],[.75,.5],[.25,.85],[.75,.85]], 7:[[.25,.12],[.75,.12],[.5,.32],[.25,.55],[.75,.55],[.25,.88],[.75,.88]]
+};
+function frameLine(y, g){
+  if (!g) return "M5 " + y + "H55";
+  const gw = 4, step = 7, start = 30 - ((g-1)*step)/2;
+  let d = "", x = 5;
+  for (let k=0;k<g;k++){ const cx = start + k*step; d += "M" + x + " " + y + "H" + (cx - gw/2); x = cx + gw/2; }
+  return d + "M" + x + " " + y + "H55";
+}
+function cardSVG(c){
+  const s = c[0], r = c[1], col = SCOL[s], g = GAPS[s];
+  let body = "";
+  if (r === "1") body = '<use href="#s-' + s + '" x="10" y="22" width="40" height="46"/>';
+  else if (PIPS[r]){
+    const n = +r, sz = n <= 3 ? 19 : 15;
+    body = PIPS[r].map(([fx,fy]) => '<use href="#s-' + s + '" x="' + (12 + fx*36 - sz/2) + '" y="' + (16 + fy*58 - sz/2) + '" width="' + sz + '" height="' + sz + '"/>').join("");
+  } else {
+    const label = r === "s" ? "SOTA" : r === "c" ? "CABALLO" : "REY";
+    body = '<rect x="9" y="15" width="42" height="60" rx="3" fill="#f3e6c4" stroke="' + col + '" stroke-width=".8"/>' +
+      '<use href="#f-' + r + '" x="15" y="17" width="30" height="34"/>' +
+      '<use href="#s-' + s + '" x="19" y="49" width="22" height="20"/>' +
+      '<text x="30" y="73.5" text-anchor="middle" font-size="5" letter-spacing=".4" fill="' + col + '">' + label + '</text>';
+  }
+  const ix = RLABEL[r];
+  return '<svg class="face" viewBox="0 0 60 90" aria-hidden="true">' +
+    '<path d="' + frameLine(4, g) + frameLine(86, g) + 'M4 4V86M56 4V86" stroke="' + col + '" stroke-width="1.1" fill="none"/>' +
+    body +
+    '<text x="7" y="13" font-size="9.5" fill="' + col + '">' + ix + '</text>' +
+    '<text x="53" y="84" font-size="9.5" fill="' + col + '" transform="rotate(180 53 80.5)">' + ix + '</text>' +
+    '</svg>';
+}
+const suitOf = c => c[0], rankOf = c => c[1];
+function cardName(c){ return RNAME[rankOf(c)] + " de " + SNAME[suitOf(c)]; }
+function cardEl(c, opts={}){
+  const tag = opts.button ? "button" : "div";
+  const el = h(tag, {class:"card" + (opts.cls ? " "+opts.cls : ""), "data-s":suitOf(c), "aria-label":cardName(c), title:cardName(c), type: opts.button ? "button" : null});
+  el.innerHTML = cardSVG(c);
+  return el;
+}
+const splitHand = s => s ? s.match(/../g) : [];
+function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function makeDeck(){ const d=[]; for (const s of SUITS) for (const r of RANKS) d.push(s+r); return shuffle(d); }
+function maxCards(n){ return Math.min(10, Math.floor(40/n)); }
+/* Devuelve {seq: cartas por ronda, ty: tipo de cada ronda (n normal, s subastada, i indias)} */
+function makeSeq(n, cfg){
+  const m = maxCards(n), up=[], down=[];
+  for (let i=2;i<m;i++) up.push(i);
+  for (let i=m-1;i>=1;i--) down.push(i);
+  let seq;
+  if (cfg.m === "rapida"){ seq=[]; for (let i=m;i>=1;i--) seq.push(i); }
+  else if (cfg.m === "corta") seq = [1, ...up, m, ...down];
+  else if (cfg.m === "normal") seq = [1, ...up, ...Array(n).fill(m), ...down];
+  else seq = [...Array(n).fill(1), ...up, ...Array(n).fill(m), ...down]; // la de casa
+  let ty = "n".repeat(seq.length);
+  if (cfg.su){ seq = seq.concat(Array(n).fill(m)); ty += "s".repeat(n); }
+  if (cfg.in){ seq = seq.concat(Array(n).fill(1)); ty += "i".repeat(n); }
+  return {seq, ty};
+}
+const KIND = {n:"", s:"Subastada", i:"Indias"};
+function beats(a, b, trump){
+  if (suitOf(a) === suitOf(b)) return POW[rankOf(a)] > POW[rankOf(b)];
+  return suitOf(a) === trump;
+}
+function trickWinner(tb, trump){ let best = 0; for (let i=1;i<tb.length;i++) if (beats(tb[i][1], tb[best][1], trump)) best = i; return best; }
+/* Asistir, montar y fallar (reglas del tute) */
+function legalCards(hand, tb, trump){
+  if (!tb.length) return hand.slice();
+  const lead = suitOf(tb[0][1]);
+  const best = tb[trickWinner(tb, trump)][1];
+  const follow = hand.filter(c => suitOf(c) === lead);
+  if (follow.length){
+    if (suitOf(best) === lead){ const hi = follow.filter(c => POW[rankOf(c)] > POW[rankOf(best)]); return hi.length ? hi : follow; }
+    return follow; // ya han fallado: se asiste sin obligación de montar
+  }
+  const trumps = hand.filter(c => suitOf(c) === trump);
+  if (trumps.length){
+    if (suitOf(best) === trump){ const hi = trumps.filter(c => POW[rankOf(c)] > POW[rankOf(best)]); return hi.length ? hi : hand.slice(); }
+    return trumps;
+  }
+  return hand.slice();
+}
+function sortHand(hand, trump){
+  const order = trump ? [trump, ...SUITS.filter(s=>s!==trump)] : SUITS;
+  return hand.slice().sort((a,b)=> order.indexOf(suitOf(a)) - order.indexOf(suitOf(b)) || POW[rankOf(b)] - POW[rankOf(a)]);
+}
+function forbiddenBid(st){
+  if (!st.cfg.nt) return null;
+  const n = st.seats.length, made = st.b.filter(x => x !== null);
+  if (made.length !== n-1) return null;
+  const c = st.seq[st.r], f = c - made.reduce((a,b)=>a+b,0);
+  return (f >= 0 && f <= c) ? f : null;
+}
+
+function auctionHigh(st){
+  let best = null;
+  (st.ab || []).forEach((v,i) => { if (v !== null && v >= 0 && (best === null || v > best.v)) best = {v, i}; });
+  return best;
+}
+
+/* ---------- Estado de la sesión ---------- */
+const PID_KEY = "pocha.pid";
+let myPid = ls.get(PID_KEY); if (!myPid){ myPid = randId(); ls.set(PID_KEY, myPid); }
+let myName = ls.get("pocha.name") || "";
+let clave = ls.get("pocha.clave") || "";
+let mesa = "";
+let room = null, userNS = null, rm = null;
+let role = null;           // "host" | "player" | null
+let S = null;              // estado oficial (solo anfitrión)
+let seen = {};             // última acción procesada por jugador (anfitrión)
+let screen = "entry";      // entry | connecting | table
+let connected = false;
+let peers = [];
+let pending = null;        // {v, card} acción enviada sin confirmar
+let showScores = false, showLast = false;
+let resolveT = null;
+let otherHost = false;
+let roomReady = null;
+let solo = false, prevMesa = null, botT = null, resetArm = false;
+
+/* ---------- Arranque ---------- */
+render();
+/* ---------- Conexión entre móviles (PeerJS) ----------
+   Imita una "sala": el primero que entra con una contraseña hace de centralita,
+   recibe el estado de cada jugador y lo reenvía a todos. Si se cae, otro ocupa su sitio. */
+function makePeerRoom(){
+  return { join: async (name) => new PeerRoom(name) };
+}
+class PeerRoom {
+  constructor(name){
+    this.name = "pocha-es-" + name.replace(/[^a-z0-9-]/g, "");
+    this.me = {}; this.label = null; this.peer = null; this.conn = null; this.conns = new Map();
+    this.map = new Map(); this.list = []; this.isHub = false; this.ok = false; this.dead = false;
+    this.ph = []; this.ch = []; this.retryT = null;
+    this.tryHub();
+  }
+  setOk(v){ if (this.ok === v) return; this.ok = v; this.ch.forEach(f => { try{ f(v); }catch(e){} }); }
+  retry(){
+    if (this.dead) return;
+    clearTimeout(this.retryT);
+    this.retryT = setTimeout(() => this.tryHub(), 600 + Math.random()*1800);
+  }
+  cleanup(){
+    try{ if (this.peer) this.peer.destroy(); }catch(e){}
+    this.peer = null; this.conn = null; this.conns.clear(); this.map.clear(); this.isHub = false;
+  }
+  tryHub(){
+    if (this.dead) return;
+    this.cleanup();
+    const p = this.peer = new Peer(this.name, {debug:0});
+    p.on("open", id => {
+      if (this.peer !== p) return;
+      this.isHub = true; this.label = id; this.setOk(true); this.broadcast();
+    });
+    p.on("connection", c => {
+      c.on("open", () => { this.conns.set(c.peer, c); this.broadcast(); });
+      c.on("data", m => { if (m && m.t === "p" && m.p && typeof m.p === "object"){ this.map.set(c.peer, m.p); this.broadcast(); } });
+      const gone = () => { this.conns.delete(c.peer); this.map.delete(c.peer); this.broadcast(); };
+      c.on("close", gone); c.on("error", gone);
+    });
+    p.on("error", err => {
+      if (this.peer !== p) return;
+      if (err && err.type === "unavailable-id") this.becomeClient();
+      else if (!this.isHub) this.retry();
+    });
+    p.on("disconnected", () => { if (this.peer === p && !this.dead){ try{ p.reconnect(); }catch(e){ this.retry(); } } });
+  }
+  becomeClient(){
+    this.cleanup();
+    const p = this.peer = new Peer({debug:0});
+    p.on("open", id => {
+      if (this.peer !== p) return;
+      this.label = id;
+      const c = this.conn = p.connect(this.name, {reliable:true});
+      c.on("open", () => { this.setOk(true); c.send({t:"p", p:this.me}); });
+      c.on("data", m => { if (m && m.t === "l" && Array.isArray(m.l)){ this.list = m.l; this.emit(); } });
+      const lost = () => { if (this.conn !== c) return; this.setOk(false); this.list = this.list.filter(x => x.peer === this.label); this.emit(); this.retry(); };
+      c.on("close", lost); c.on("error", lost);
+    });
+    p.on("error", err => { if (this.peer !== p) return; this.setOk(false); this.retry(); });
+  }
+  broadcast(){
+    if (!this.isHub) return;
+    this.list = [{peer:this.label, p:this.me}, ...[...this.map].map(([peer,p]) => ({peer, p}))];
+    for (const c of this.conns.values()){ try{ c.send({t:"l", l:this.list}); }catch(e){} }
+    this.emit();
+  }
+  emit(){
+    let list = this.list;
+    if (!list.some(x => x.peer === this.label)) list = [{peer:this.label || "yo", p:this.me}, ...list];
+    const peers = list.map(x => ({peer:x.peer, presence:x.p || {}, sameTab:x.peer === this.label, isMe:x.peer === this.label, by:null, kind:"viewer", guest:false, updatedAt:Date.now()}));
+    this.ph.forEach(f => { try{ f({peers, joined:[], left:[], updated:[]}); }catch(e){ console.error(e); } });
+  }
+  presence(patch){
+    for (const [k,v] of Object.entries(patch)){ if (v === null) delete this.me[k]; else this.me[k] = v; }
+    if (this.isHub) this.broadcast();
+    else { if (this.conn && this.conn.open){ try{ this.conn.send({t:"p", p:this.me}); }catch(e){} } this.emit(); }
+    return Promise.resolve();
+  }
+  onPeers(f){ this.ph.push(f); setTimeout(() => this.emit(), 0); return () => { this.ph = this.ph.filter(x => x !== f); }; }
+  onConnection(f){ this.ch.push(f); setTimeout(() => f(this.ok), 0); return () => { this.ch = this.ch.filter(x => x !== f); }; }
+  connected(){ return this.ok; }
+  async leave(){ this.dead = true; clearTimeout(this.retryT); this.cleanup(); this.ph = []; this.ch = []; }
+}
+
+roomReady = (async () => { room = (typeof window.Peer === "function") ? makePeerRoom() : null; return room; })();
+
+let wake = null;
+async function keepAwake(){
+  try{ if (navigator.wakeLock && document.visibilityState === "visible") wake = await navigator.wakeLock.request("screen"); }catch(e){}
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && screen === "table") keepAwake(); });
+
+async function roomKey(pw){
+  try{
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("pocha:" + pw));
+    return [...new Uint8Array(buf)].slice(0,16).map(b => b.toString(16).padStart(2,"0")).join("");
+  }catch(e){
+    let h1 = 0x811c9dc5, h2 = 0x1234567;
+    for (const ch of "pocha:" + pw){ h1 = Math.imul(h1 ^ ch.charCodeAt(0), 16777619) >>> 0; h2 = Math.imul(h2 + ch.charCodeAt(0), 2654435761) >>> 0; }
+    return h1.toString(16) + h2.toString(16);
+  }
+}
+async function enter(asHost){
+  const nameIn = document.getElementById("nm"), codeIn = document.getElementById("code");
+  myName = cleanName(nameIn ? nameIn.value : myName);
+  clave = (codeIn ? codeIn.value : clave).trim().toLowerCase();
+  if (clave.length < 4){ toast("Pon una contraseña de al menos 4 caracteres."); return; }
+  mesa = await roomKey(clave);
+  ls.set("pocha.name", myName); ls.set("pocha.clave", clave);
+  keepAwake();
+  screen = "connecting"; render();
+  const r = await roomReady;
+  if (!r){ screen = "entry"; render(); toast("No se puede conectar con la mesa desde aquí."); return; }
+  try{ rm = await r.join("pocha-" + mesa); }
+  catch(e){ screen = "entry"; render(); toast("No se ha podido entrar en la mesa. Prueba otra vez en unos segundos."); return; }
+  rm.onConnection(c => { connected = c; render(); });
+  rm.onPeers(ch => { peers = ch.peers; onPeers(); });
+  if (asHost){
+    await new Promise(res => setTimeout(res, 3000));
+    const hp = findHostPeer();
+    if (hp && hp.presence.pid !== myPid){
+      toast("Esta mesa ya tiene anfitrión. Entras como jugador.");
+      becomePlayer();
+    } else becomeHost();
+  } else {
+    const saved = ls.get("pocha.host." + mesa);
+    await new Promise(res => setTimeout(res, 3000));
+    const hp = findHostPeer();
+    if (!hp && saved && saved.pid === myPid) becomeHost(); else becomePlayer();
+  }
+  screen = "table"; render();
+}
+
+function becomeHost(){
+  role = "host";
+  const saved = ls.get("pocha.host." + mesa);
+  if (saved && saved.pid === myPid && saved.S && saved.S.ty !== undefined){ S = saved.S; seen = saved.seen || {}; S.cfg = {m:"casa", nt:true, od:false, su:true, in:true, ...S.cfg}; }
+  else { S = newState(); seen = {}; }
+  seatJoin(myPid, myName);
+  if (S.ph === "trick") scheduleResolve();
+  publish();
+}
+function becomePlayer(){
+  role = "player";
+  rm.presence({pid:myPid, nm:myName, role:"player", act:{k:Date.now(), t:"join"}}).catch(()=>{});
+}
+async function leaveTable(){
+  if (role === "player") await rm.presence({pid:myPid, nm:myName, role:"player", act:{k:Date.now(), t:"leave"}}).catch(()=>{});
+  if (role === "host" && S && S.ph === "lobby"){ ls.del("pocha.host." + mesa); }
+  try{ if (rm) await rm.leave(); }catch(e){}
+  if (solo){ solo = false; mesa = prevMesa || mesa; }
+  clearTimeout(botT); botT = null;
+  rm = null; role = null; S = null; peers = []; screen = "entry"; clearTimeout(resolveT); resolveT = null; render();
+}
+
+function findHostPeer(){
+  const hs = peers.filter(p => p.presence && p.presence.role === "host" && p.presence.st && !p.sameTab);
+  if (!hs.length) return null;
+  hs.sort((a,b)=> (b.presence.st.v||0) - (a.presence.st.v||0));
+  return hs[0];
+}
+function onlinePids(){
+  const set = new Set(peers.map(p => p.presence && p.presence.pid).filter(Boolean));
+  set.add(myPid);
+  const st = viewState();
+  if (st) st.seats.forEach(x => { if (x.bot || solo) set.add(x.p); });
+  return set;
+}
+
+function onPeers(){
+  if (role === "host"){
+    otherHost = peers.some(p => !p.sameTab && p.presence && p.presence.role === "host" && p.presence.pid !== myPid);
+    for (const p of peers){
+      const pr = p.presence; if (!pr || !pr.pid || pr.pid === myPid || !pr.act) continue;
+      const a = pr.act; if (typeof a.k !== "number" || a.k <= (seen[pr.pid]||0)) continue;
+      seen[pr.pid] = a.k;
+      hostHandle(pr.pid, cleanName(pr.nm), a, onlinePids());
+    }
+  }
+  render();
+}
+
+/* ---------- Motor del anfitrión ---------- */
+function newState(prev){
+  return {v: prev ? prev.v+1 : 1, ph:"lobby", seats: prev ? prev.seats : [],
+    cfg: prev ? prev.cfg : {m:"casa", nt:true, od:false, su:true, in:true},
+    seq:[], ty:"", ab:[], r:-1, dl:0, mu:null, tr:null, h:[], b:[], w:[], tb:[], tu:0, sc:[], hist:[], lt:null};
+}
+function seatOf(st, pid){ return st ? st.seats.findIndex(s => s.p === pid) : -1; }
+function seatJoin(pid, nm){
+  const i = seatOf(S, pid);
+  if (i >= 0){ S.seats[i].n = nm; return true; }
+  if (S.ph === "lobby"){
+    if (S.seats.length >= 6) return false;
+    S.seats.push({p:pid, n:nm}); return true;
+  }
+  // partida en marcha: recuperar el sitio por nombre si su dueño no está conectado
+  const on = onlinePids(); on.add(myPid);
+  const j = S.seats.findIndex(s => s.n.toLowerCase() === nm.toLowerCase() && !on.has(s.p));
+  if (j >= 0){ S.seats[j].p = pid; return true; }
+  return false;
+}
+function hostHandle(pid, nm, a){
+  const me = seatOf(S, pid);
+  let changed = false;
+  switch (a.t){
+    case "join": changed = seatJoin(pid, nm); break;
+    case "leave":
+      if (S.ph === "lobby" && me >= 0 && pid !== myPid){ S.seats.splice(me,1); changed = true; }
+      break;
+    case "bid": {
+      if (S.ph !== "bid" || me < 0 || me !== S.tu || a.r !== S.r) break;
+      const c = S.seq[S.r], v = a.v;
+      if (!Number.isInteger(v) || v < 0 || v > c || v === forbiddenBid(S)) break;
+      S.b[me] = v; changed = true;
+      if (S.b.every(x => x !== null)){ S.ph = "play"; S.tu = S.ty[S.r] === "s" ? S.aw : (S.dl+1) % S.seats.length; }
+      else S.tu = nextNoBid(S.tu);
+      break;
+    }
+    case "auc": {
+      if (S.ph !== "auction" || me < 0 || me !== S.tu || a.r !== S.r) break;
+      const c = S.seq[S.r], v = a.v, hi = auctionHigh(S);
+      const lastOne = S.ab.filter(x => x === null).length === 1;
+      if (v === -1){ if (lastOne && hi === null) break; }
+      else if (!Number.isInteger(v) || v > c || v < (hi === null ? 0 : hi.v + 1)) break;
+      S.ab[me] = v; changed = true;
+      if (S.ab.every(x => x !== null)){ const w = auctionHigh(S); S.aw = w.i; S.ph = "choose"; S.tu = w.i; }
+      else S.tu = (S.tu+1) % S.seats.length;
+      break;
+    }
+    case "trump": {
+      if (S.ph !== "choose" || me !== S.tu || a.r !== S.r || !SUITS.includes(a.s)) break;
+      S.tr = a.s; S.b[me] = S.ab[me]; changed = true;
+      S.ph = "bid"; S.tu = nextNoBid(S.dl);
+      if (S.b.every(x => x !== null)){ S.ph = "play"; S.tu = S.aw; }
+      break;
+    }
+    case "play": {
+      if (S.ph !== "play" || me < 0 || me !== S.tu || a.r !== S.r) break;
+      const hand = splitHand(S.h[me]);
+      if (!hand.includes(a.c) || !legalCards(hand, S.tb, S.tr).includes(a.c)) break;
+      S.h[me] = hand.filter(x => x !== a.c).join("");
+      S.tb.push([me, a.c]); changed = true;
+      if (S.tb.length === S.seats.length){ S.ph = "trick"; scheduleResolve(); }
+      else S.tu = (S.tu+1) % S.seats.length;
+      break;
+    }
+    case "next":
+      if (S.ph === "roundEnd" && a.r === S.r && me >= 0){
+        if (S.r + 1 >= S.seq.length) S.ph = "end"; else startRound(S.r+1);
+        changed = true;
+      }
+      break;
+  }
+  if (changed) publish(); else saveHost();
+}
+function nextNoBid(from){
+  const n = S.seats.length;
+  for (let k=1;k<=n;k++){ const i = (from+k) % n; if (S.b[i] === null) return i; }
+  return from;
+}
+function startGame(){
+  const n = S.seats.length;
+  if (n < 3) return;
+  const sq = makeSeq(n, S.cfg); S.seq = sq.seq; S.ty = sq.ty;
+  S.sc = Array(n).fill(0); S.hist = [];
+  S.dl = Math.floor(Math.random()*n);
+  startRound(0);
+  publish();
+}
+function startRound(r){
+  const n = S.seats.length;
+  if (r > 0) S.dl = (S.dl+1) % n;
+  S.r = r;
+  const c = S.seq[r], deck = makeDeck(), hands = Array.from({length:n}, () => []);
+  let k = 0;
+  for (let i=0;i<c;i++) for (let j=1;j<=n;j++) hands[(S.dl+j) % n].push(deck[k++]);
+  S.h = hands.map(x => x.join(""));
+  S.b = Array(n).fill(null); S.w = Array(n).fill(0);
+  S.tb = []; S.lt = null; S.ab = []; S.aw = null;
+  S.tu = (S.dl+1) % n;
+  if (S.ty[r] === "s"){
+    S.mu = null; S.tr = null; S.ab = Array(n).fill(null); S.ph = "auction";
+  } else {
+    S.mu = k < deck.length ? deck[k] : deck[k-1]; // se da la vuelta a la siguiente; si no quedan, la última del que reparte
+    S.tr = suitOf(S.mu); S.ph = "bid";
+  }
+}
+function scheduleResolve(){ if (resolveT) return; resolveT = setTimeout(resolveTrick, 1700); }
+function resolveTrick(){
+  resolveT = null;
+  if (!S || S.ph !== "trick") return;
+  const win = S.tb[trickWinner(S.tb, S.tr)][0];
+  S.w[win]++; S.lt = {c:S.tb, g:win}; S.tb = []; S.tu = win;
+  if (S.h.every(x => !x)){
+    const mult = (S.cfg.od && S.tr === "O") ? 2 : 1;
+    const p = S.b.map((b,i) => (b === S.w[i] ? 10 + 5*b : -5*Math.abs(S.w[i]-b)) * mult);
+    p.forEach((x,i) => S.sc[i] += x);
+    S.hist.push({c:S.seq[S.r], t:S.tr, k:S.ty[S.r], b:S.b.slice(), w:S.w.slice(), p});
+    S.ph = "roundEnd";
+  } else S.ph = "play";
+  publish();
+}
+function saveHost(){ ls.set("pocha.host." + mesa, {pid:myPid, S, seen}); }
+function publish(){
+  S.v++;
+  let st = S;
+  if (JSON.stringify(st).length > 3500){ st = {...S, hist: S.hist.map(x => ({p:x.p, k:x.k}))}; }
+  saveHost();
+  if (rm) rm.presence({pid:myPid, nm:myName, role:"host", st}).catch(e => { if (e && e.code === "invalid_argument") toast("La partida es demasiado grande para compartirla."); });
+  pending = null;
+  render();
+  scheduleBot();
+}
+
+/* ---------- Jugar contra la máquina ---------- */
+function enterSolo(){
+  const nameIn = document.getElementById("nm");
+  myName = cleanName(nameIn ? nameIn.value : myName);
+  ls.set("pocha.name", myName);
+  solo = true; prevMesa = mesa; mesa = "solo"; role = "host"; rm = null; peers = []; otherHost = false;
+  const saved = ls.get("pocha.host.solo");
+  if (saved && saved.pid === myPid && saved.S && saved.S.ty !== undefined){ S = saved.S; S.cfg = {m:"casa", nt:true, od:false, su:true, in:true, ...S.cfg}; }
+  else { S = newState(); S.seats = [{p:myPid, n:myName}]; for (let k=0;k<3;k++) pushBot(); }
+  seatJoin(myPid, myName);
+  screen = "table";
+  if (S.ph === "trick") scheduleResolve();
+  publish();
+}
+const BOT_NAMES = ["Lola","Paco","Maite","Toño","Rosa","Quique"];
+function pushBot(){
+  if (S.seats.length >= 6) return;
+  const used = new Set(S.seats.map(x => x.n));
+  const n = BOT_NAMES.find(x => !used.has(x)) || ("Bot " + S.seats.length);
+  S.seats.push({p:"bot-" + randId(), n, bot:true});
+}
+function scheduleBot(){
+  if (role !== "host" || !S || botT) return;
+  if (!["bid","play","auction","choose"].includes(S.ph)) return;
+  const st = S.seats[S.tu];
+  if (!st || !st.bot) return;
+  botT = setTimeout(() => { botT = null; botMove(); }, 700 + Math.random()*700);
+}
+function estimate(hand, trump, n){
+  const cnt = {}; hand.forEach(c => cnt[suitOf(c)] = (cnt[suitOf(c)]||0) + 1);
+  let e = 0;
+  for (const c of hand){
+    const s = suitOf(c), p = POW[rankOf(c)];
+    if (s === trump) e += p >= 10 ? 0.95 : p === 9 ? 0.85 : p === 8 ? 0.7 : p === 7 ? 0.55 : p === 6 ? 0.45 : 0.3;
+    else if (p === 10) e += cnt[s] >= 4 ? 0.55 : 0.85;
+    else if (p === 9) e += (hand.includes(s + "1") ? 0.7 : 0.4) * (cnt[s] >= 4 ? 0.7 : 1);
+    else if (p === 8) e += 0.2;
+  }
+  return n >= 5 ? e * 0.9 : e;
+}
+function bestSuit(hand){
+  let best = {s:"O", e:-1};
+  for (const s of SUITS){ const e = estimate(hand, s, S.seats.length); if (e > best.e) best = {s, e}; }
+  return best;
+}
+function indiasEst(i){
+  const vis = S.h.filter((x,k) => k !== i && x).map(x => x);
+  const known = new Set([...vis, S.mu]);
+  const pool = []; for (const su of SUITS) for (const r of RANKS){ const c = su + r; if (!known.has(c)) pool.push(c); }
+  let tot = 0;
+  for (const x of pool){
+    let pr = 1;
+    for (const v of vis){
+      if (suitOf(x) === suitOf(v)) pr *= POW[rankOf(x)] > POW[rankOf(v)] ? 1 : 0;
+      else if (suitOf(x) === S.tr) pr *= 1;
+      else if (suitOf(v) === S.tr) pr *= 0;
+      else pr *= 0.5;
+    }
+    tot += pr;
+  }
+  return pool.length ? tot / pool.length : 0;
+}
+function chooseCard(i, hand){
+  const legal = legalCards(hand, S.tb, S.tr);
+  if (legal.length === 1) return legal[0];
+  const str = c => (suitOf(c) === S.tr ? 20 : 0) + POW[rankOf(c)];
+  const asc = legal.slice().sort((a,b) => str(a) - str(b));
+  const need = S.b[i] - S.w[i];
+  const n = S.seats.length;
+  if (!S.tb.length){
+    if (need > 0){
+      const high = asc.filter(c => suitOf(c) !== S.tr && POW[rankOf(c)] >= 9);
+      if (high.length) return high[high.length-1];
+      const tr = asc.filter(c => suitOf(c) === S.tr);
+      if (tr.length >= 2) return tr[tr.length-1];
+      return asc[0];
+    }
+    const plain = asc.filter(c => suitOf(c) !== S.tr);
+    return (plain.length ? plain : asc)[0];
+  }
+  const last = S.tb.length === n - 1;
+  const wins = c => trickWinner([...S.tb, [i, c]], S.tr) === S.tb.length;
+  const W = asc.filter(wins), L = asc.filter(c => !wins(c));
+  if (need > 0){
+    if (W.length) return last ? W[0] : W[W.length-1];
+    return asc[0];
+  }
+  if (L.length) return L[L.length-1];
+  return last ? W[W.length-1] : W[0];
+}
+function botMove(){
+  if (!S || role !== "host") return;
+  const i = S.tu, st = S.seats[i];
+  if (!st || !st.bot) return;
+  const r = S.r, c = S.seq[r], kind = S.ty[r], hand = splitHand(S.h[i]);
+  let a = null;
+  if (S.ph === "auction"){
+    const best = bestSuit(hand), hi = auctionHigh(S);
+    const lastOne = S.ab.filter(x => x === null).length === 1;
+    let v = Math.max(0, Math.min(c, Math.round(best.e)));
+    if (hi && v <= hi.v) v = -1;
+    if (v === -1 && lastOne && !hi) v = Math.max(0, Math.min(c, Math.round(best.e)));
+    a = {t:"auc", v, r};
+  } else if (S.ph === "choose"){
+    a = {t:"trump", s: bestSuit(hand).s, r};
+  } else if (S.ph === "bid"){
+    const e = kind === "i" ? indiasEst(i) : estimate(hand, S.tr, S.seats.length);
+    let v = Math.max(0, Math.min(c, Math.round(e)));
+    const fb = forbiddenBid(S);
+    if (v === fb) v = (v === 0 || (e >= v && v < c)) ? v + 1 : v - 1;
+    a = {t:"bid", v, r};
+  } else if (S.ph === "play"){
+    a = {t:"play", c: chooseCard(i, hand), r};
+  }
+  if (a) hostHandle(st.p, st.n, a);
+}
+
+/* ---------- Acciones del jugador ---------- */
+function act(a){
+  if (role === "host"){ hostHandle(myPid, myName, a); return; }
+  if (!rm) return;
+  const st = viewState();
+  const p = pending = {v: st ? st.v : 0, c: a.c || null};
+  setTimeout(() => { if (pending === p){ pending = null; render(); } }, 4000);
+  rm.presence({pid:myPid, nm:myName, role:"player", act:{k:Date.now(), ...a}}).catch(()=>{ pending = null; render(); toast("No se ha enviado. Comprueba la conexión."); });
+  render();
+}
+function viewState(){
+  if (role === "host") return S;
+  const hp = findHostPeer();
+  return hp ? hp.presence.st : null;
+}
+
+/* ---------- Pantallas ---------- */
+function render(){
+  const st = viewState();
+  if (pending && st && st.v !== pending.v) pending = null;
+  app.replaceChildren();
+  if (screen === "entry") return renderEntry();
+  if (screen === "connecting") return app.append(topBar(), h("div",{class:"panel"}, h("p",{class:"status",text:"Entrando en la mesa…"})));
+  app.append(topBar());
+  if (otherHost) app.append(h("div",{class:"panel"}, h("p",{class:"small",text:"Hay otra persona abriendo esta misma mesa. Usad un solo anfitrión: que el otro salga y entre con «Unirme»."})));
+  if (!st){ app.append(waitingHost()); return; }
+  if (st.ph === "lobby") return renderLobby(st);
+  if (st.ph === "end") return renderEnd(st);
+  renderGame(st);
+}
+function topBar(){
+  const right = h("div",{class:"row"});
+  if (screen === "table" && solo && S && S.ph !== "lobby"){
+    right.append(h("button",{class:"link",type:"button",onclick:()=>{ if (!resetArm){ resetArm = true; render(); setTimeout(()=>{ resetArm = false; render(); }, 3000); return; } resetArm = false; clearTimeout(resolveT); resolveT = null; S = newState(S); publish(); },text: resetArm ? "¿Seguro? Toca otra vez" : "Empezar de nuevo"}));
+  }
+  if (screen === "table" && !solo){
+    right.append(h("span",{class:"conn"}, h("span",{class:"dot " + (connected ? "on" : "off")}), connected ? "Conectado" : "Reconectando…"));
+    right.append(h("button",{class:"link",type:"button",onclick:leaveTable,text:"Salir"}));
+  }
+  if (screen === "table" && solo) right.append(h("button",{class:"link",type:"button",onclick:leaveTable,text:"Salir"}));
+  return h("div",{class:"top"}, h("div",{class:"brand"}, "Pocha", h("span",{class:"muted small",text: screen === "table" ? (solo ? "  · contra la máquina" : "  · mesa privada") : ""})), right);
+}
+function renderEntry(){
+  const hasRoom = room !== null;
+  app.append(
+    h("div",{class:"row",style:"justify-content:space-between;align-items:flex-end"},
+      h("h1",{text:"Pocha"}),
+      h("div",{class:"suits"}, ...["O","C","E","B"].map(s => cardEl(s + (s==="O"?"1":s==="C"?"3":s==="E"?"r":"c"), {cls:"sm"})))),
+    h("p",{class:"muted",text:"Baraja española, de 3 a 6 jugadores, cada uno desde su móvil o contra la máquina. Pide las bazas que vas a hacer y acierta."}),
+    h("div",{class:"panel"},
+      h("div",{class:"row"},
+        h("label",{class:"field"}, h("span",{class:"label",text:"Tu nombre"}), h("input",{type:"text",id:"nm",maxlength:"14",value:myName,autocomplete:"nickname",placeholder:"Daniel"})),
+        h("label",{class:"field"}, h("span",{class:"label",text:"Contraseña de la mesa"}), h("input",{type:"password",id:"code",maxlength:"40",value:clave,autocapitalize:"off",autocomplete:"off",spellcheck:"false",placeholder:"Mínimo 4 caracteres"}))),
+      h("label",{class:"check small"}, h("input",{type:"checkbox",id:"showpw",onchange:e=>{ const c = document.getElementById("code"); if (c) c.type = e.target.checked ? "text" : "password"; }}), h("span",{text:"Mostrar contraseña"})),
+      h("p",{class:"small muted",text:"Quien crea la mesa elige la contraseña y se la pasa a sus amigos; solo entra quien la escriba igual (da igual mayúsculas o minúsculas). El que la crea hace de anfitrión: su móvil reparte y lleva la cuenta, así que tiene que tener la pantalla abierta durante la partida."}),
+      h("div",{class:"row"},
+        h("button",{class:"primary grow",type:"button",onclick:()=>enter(true),text:"Crear mesa"}),
+        h("button",{class:"grow",type:"button",onclick:()=>enter(false),text:"Unirme"}))),
+    h("div",{class:"panel"},
+      h("h2",{text:"Contra la máquina"}),
+      h("p",{class:"small muted",text:"Juega tú solo contra jugadores automáticos. No hace falta conexión con nadie."}),
+      h("button",{type:"button",onclick:enterSolo,text:"Jugar contra la máquina"})),
+    rulesBox()
+  );
+  if (room === null && roomReady){
+    roomReady.then(r => { if (!r && screen === "entry" && !document.getElementById("noroom")) app.insertBefore(h("div",{class:"panel",id:"noroom"}, h("p",{class:"small",text:"No se ha podido cargar la conexión para jugar online. Comprueba que tienes internet y recarga la página. El modo contra la máquina funciona igualmente."})), app.children[3] || null); });
+  }
+  void hasRoom;
+}
+function rulesBox(){
+  return h("details",{class:"panel rules"},
+    h("summary",{text:"Reglas que usa esta mesa"}),
+    h("ul",{class:"small"},
+      h("li",{text:"Baraja española de 40 cartas. Orden de mayor a menor: As, Tres, Rey (12), Caballo (11), Sota (10), 7, 6, 5, 4, 2."}),
+      h("li",{text:"Rondas (a nuestra manera): primero tantas de 1 carta como jugadores; luego se sube de una en una hasta el máximo, se juegan tantas al máximo como jugadores y se baja hasta 1. Reparte cada vez el siguiente."}),
+      h("li",{text:"Subastadas (una por jugador, con el máximo de cartas): no se enseña triunfo. Cada uno, una vez, puja más bazas que la puja más alta o pasa; si pasan todos, el que da tiene que pujar. Quien gana elige el triunfo, su puja es lo que pide y sale él. Después piden los demás."}),
+      h("li",{text:"Indias (una por jugador, con 1 carta): ves la carta de los demás pero no la tuya. Pides a ciegas y echas tu carta sin verla."}),
+      h("li",{text:"Tras repartir se enseña la siguiente carta del mazo y su palo es el triunfo. Si no sobran cartas, manda la última que recibió el que reparte."}),
+      h("li",{text:"Empezando por la derecha del que da, cada uno pide cuántas bazas va a hacer. El que da pide el último y, por defecto, no puede pedir un número que haga que la suma cuadre con las cartas repartidas."}),
+      h("li",{text:"Sale el de la derecha del que da. Es obligatorio asistir al palo y montar (echar más alta) si se puede. Si no tienes del palo, tienes que fallar con triunfo, y montar al triunfo que ya haya. Si no puedes montar al triunfo, echas lo que quieras."}),
+      h("li",{text:"Gana la baza la carta más alta del palo de salida, salvo que haya triunfo: entonces gana el triunfo más alto. Quien gana sale en la siguiente."}),
+      h("li",{text:"Si haces justo las bazas que pediste: 10 puntos más 5 por baza. Si no: pierdes 5 por cada baza de diferencia. Gana quien más puntos tenga al final."})));
+}
+function waitingHost(){
+  return h("div",{class:"panel"},
+    h("h2",{text:"Esperando al anfitrión"}),
+    h("p",{class:"muted",text:"Nadie tiene abierta una mesa con esa contraseña ahora mismo. Comprueba que la has escrito igual que el anfitrión. Si es correcta, la partida aparecerá aquí sola cuando él entre."}));
+}
+function renderLobby(st){
+  const on = onlinePids(); on.add(myPid);
+  const isHost = role === "host";
+  const n = st.seats.length;
+  const list = h("ul",{class:"seats"}, st.seats.map((s,i) => h("li",null,
+    h("span",{class:"dot " + (on.has(s.p) ? "on" : "off")}),
+    h("span",{class:"n",text:s.n}),
+    i === 0 && !solo ? h("span",{class:"tag brass",text:"anfitrión"}) : null,
+    s.bot ? h("span",{class:"tag",text:"máquina"}) : null,
+    s.p === myPid ? h("span",{class:"tag",text:"tú"}) : null,
+    isHost && s.p !== myPid ? h("button",{class:"link",type:"button","aria-label":"Quitar a " + s.n,onclick:()=>{ S.seats = S.seats.filter(x => x.p !== s.p); publish(); },text:"Quitar"}) : null)));
+  const panel = h("div",{class:"panel"},
+    h("div",{class:"row",style:"justify-content:space-between"}, h("h2",{text: solo ? "Contra la máquina" : "Mesa privada"}), h("span",{class:"muted small",text:n + " de 6"})),
+    list,
+    isHost ? h("button",{type:"button",disabled:n >= 6,onclick:()=>{ pushBot(); publish(); },text:"Añadir jugador de la máquina"}) : null,
+    solo ? null : h("p",{class:"small muted",text:"Pasa a tus amigos el enlace de esta página y la contraseña de la mesa. Si faltáis gente, añade jugadores de la máquina."}));
+  app.append(panel);
+  if (seatOf(st, myPid) < 0 && role === "player") app.append(h("div",{class:"panel"}, h("p",{text:"La mesa está llena o el anfitrión aún no te ha sentado."}), h("button",{type:"button",onclick:()=>act({t:"join"}),text:"Pedir sitio otra vez"})));
+  const m = n >= 3 ? maxCards(n) : null;
+  if (isHost){
+    const cfg = S.cfg;
+    const sel = h("select",{id:"mode",onchange:e=>{ S.cfg.m = e.target.value; publish(); }},
+      h("option",{value:"casa",text:"La nuestra: una de 1 por jugador, sube, máximo una por jugador, baja"}),
+      h("option",{value:"normal",text:"Clásica: sube, máximo una por jugador, baja"}),
+      h("option",{value:"corta",text:"Corta: sube y baja sin repetir el máximo"}),
+      h("option",{value:"rapida",text:"Rápida: solo baja desde el máximo"}));
+    sel.value = cfg.m;
+    app.append(h("div",{class:"panel"},
+      h("h2",{text:"Partida"}),
+      h("label",{class:"field"}, h("span",{class:"label",text:"Rondas"}), sel),
+      h("label",{class:"check"}, h("input",{type:"checkbox",id:"su",checked:cfg.su,onchange:e=>{ S.cfg.su = e.target.checked; publish(); }}), h("span",null, "Después, subastadas", h("br"), h("span",{class:"small muted",text:"Una por jugador, con el máximo de cartas. Quien más bazas puja elige el triunfo."}))),
+      h("label",{class:"check"}, h("input",{type:"checkbox",id:"in",checked:cfg.in,onchange:e=>{ S.cfg.in = e.target.checked; publish(); }}), h("span",null, "Al final, indias", h("br"), h("span",{class:"small muted",text:"Una por jugador, con 1 carta que ves en los demás pero no en ti."}))),
+      m ? h("p",{class:"small muted",text:"Con " + n + " jugadores: hasta " + m + " cartas, " + makeSeq(n, cfg).seq.length + " rondas."}) : null,
+      h("label",{class:"check"}, h("input",{type:"checkbox",id:"nt",checked:cfg.nt,onchange:e=>{ S.cfg.nt = e.target.checked; publish(); }}), h("span",null, "El que da no puede cuadrar las bazas", h("br"), h("span",{class:"small muted",text:"Así siempre falla alguien."}))),
+      h("label",{class:"check"}, h("input",{type:"checkbox",id:"od",checked:cfg.od,onchange:e=>{ S.cfg.od = e.target.checked; publish(); }}), h("span",null, "Rondas que pintan oros puntúan doble")),
+      h("button",{class:"primary",type:"button",disabled:n < 3,onclick:startGame,text: n < 3 ? "Hacen falta al menos 3 jugadores" : "Repartir"})));
+  } else {
+    app.append(h("div",{class:"panel"}, h("p",{class:"muted",text:"El anfitrión empezará la partida cuando estéis todos. " + ({casa:"Partida a nuestra manera", normal:"Partida clásica", corta:"Partida corta", rapida:"Partida rápida"}[st.cfg.m] || "Partida") + (st.cfg.su ? ", con subastadas" : "") + (st.cfg.in ? ", con indias" : "") + (st.cfg.nt ? ", el que da no puede cuadrar" : "") + (st.cfg.od ? ", oros doble" : "") + "."})));
+  }
+  app.append(rulesBox());
+}
+function playersStrip(st, mine){
+  const on = onlinePids(); on.add(myPid);
+  const showTurn = ["bid","play","auction","choose"].includes(st.ph);
+  const indias = st.ty && st.ty[st.r] === "i";
+  return h("div",{class:"players"}, st.seats.map((s,i) => {
+    const b = st.b[i], w = st.w[i];
+    let wcls = "";
+    if (b !== null && b !== undefined) wcls = w === b ? "hit" : w > b ? "over" : "";
+    let line;
+    if (st.ph === "auction"){
+      const a = st.ab[i];
+      line = h("div",{class:"bw"}, "subasta ", h("b",{text: a === null || a === undefined ? "–" : a === -1 ? "pasa" : String(a)}));
+    } else {
+      line = h("div",{class:"bw"}, "pide ", h("b",{text: b === null || b === undefined ? "–" : String(b)}), " · lleva ", h("b",{class:wcls,text:String(w || 0)}));
+    }
+    const shown = indias && i !== mine && st.h[i] ? cardEl(st.h[i], {cls:"sm"}) : null;
+    return h("div",{class:"pl" + (showTurn && st.tu === i ? " turn" : "") + (i === mine ? " me" : "")},
+      h("div",{class:"nm"}, h("span",{class:"dot " + (on.has(s.p) ? "on" : "off")}), h("span",{class:"t",text: i === mine ? s.n + " (tú)" : s.n}), s.bot ? h("span",{class:"da",style:"background:var(--felt-line)",title:"Jugador de la máquina",text:"IA"}) : null, st.dl === i ? h("span",{class:"da",title:"Reparte",text:"DA"}) : null, st.ty && st.ty[st.r] === "s" && st.aw === i ? h("span",{class:"da",style:"background:var(--brass);color:var(--brass-ink)",title:"Eligió el triunfo",text:"SUB"}) : null),
+      h("div",{class:"row",style:"justify-content:space-between;gap:6px;flex-wrap:nowrap"},
+        h("div",null, line, h("div",{class:"pts",text:String(st.sc[i] || 0)})), shown));
+  }));
+}
+function suitBadge(s){
+  return h("div",{class:"card sm trumpcard","data-s":s,"aria-label":SNAME[s]}, h("span",{html:SVG[s]}));
+}
+function renderGame(st){
+  const n = st.seats.length, mine = seatOf(st, myPid), c = st.seq[st.r];
+  const name = i => i === mine ? "Tú" : st.seats[i].n;
+  const kind = (st.ty || "")[st.r] || "n";
+  const trumpBox = st.tr
+    ? h("div",{class:"trump"}, h("div",{style:"text-align:right"}, h("div",{class:"label",text:"Triunfo"}), h("div",{style:"font-weight:800",text:SNAME[st.tr]})), st.mu ? cardEl(st.mu, {cls:"sm trumpcard"}) : suitBadge(st.tr))
+    : h("div",{class:"trump"}, h("div",{style:"text-align:right"}, h("div",{class:"label",text:"Triunfo"}), h("div",{style:"font-weight:800",text:"Se subasta"})));
+  app.append(h("div",{class:"roundbar"},
+    h("div",null, h("div",{class:"label",text:"Ronda " + (st.r+1) + " de " + st.seq.length + (KIND[kind] ? " · " + KIND[kind] : "")}), h("div",{style:"font-family:var(--display);font-size:1.3rem",text: c + (c === 1 ? " carta" : " cartas")})),
+    trumpBox));
+  app.append(playersStrip(st, mine));
+
+  // Mesa
+  let status = "", myTurn = false;
+  if (st.ph === "auction"){ myTurn = st.tu === mine; status = myTurn ? "Te toca subastar" : "Subasta " + name(st.tu); }
+  else if (st.ph === "choose"){ myTurn = st.tu === mine; status = myTurn ? "Has ganado la subasta: elige triunfo" : name(st.tu) + " elige el triunfo"; }
+  else if (st.ph === "bid"){ myTurn = st.tu === mine; status = myTurn ? "Te toca pedir" : "Pide " + name(st.tu); }
+  else if (st.ph === "play"){ myTurn = st.tu === mine; status = myTurn ? "Te toca jugar" : "Juega " + name(st.tu); }
+  else if (st.ph === "trick"){ const g = st.tb[trickWinner(st.tb, st.tr)][0]; status = g === mine ? "Baza para ti" : "Baza para " + st.seats[g].n; }
+  else if (st.ph === "roundEnd") status = "Fin de la ronda";
+  const tbl = h("div",{class:"table"});
+  if (st.ph === "bid"){
+    const tot = st.b.filter(x => x !== null).reduce((a,b)=>a+b,0);
+    tbl.append(h("p",{class:"muted small",text:"Pedidas " + tot + " de " + c + " bazas"}));
+  }
+  if (st.tb.length){
+    const gi = st.ph === "trick" ? trickWinner(st.tb, st.tr) : -1;
+    tbl.append(h("div",{class:"played"}, st.tb.map(([s,cd],k) => h("div",{class:"slot" + (k === gi ? " win" : "")}, cardEl(cd), h("span",{class:"who",text:name(s)})))));
+  } else if (st.ph === "play"){
+    tbl.append(h("p",{class:"muted small",text: st.lt ? "Sale " + name(st.tu) : "Sale " + name(st.tu) + (kind === "s" ? ", que ganó la subasta" : ", a la derecha del que da")}));
+  }
+  if (st.ph === "auction"){
+    const hi = auctionHigh(st);
+    tbl.append(h("p",{class:"muted small",text: hi ? "Va ganando " + name(hi.i) + " con " + hi.v + (hi.v === 1 ? " baza" : " bazas") : "Nadie ha pujado todavía"}));
+  }
+  tbl.append(h("p",{class:"status" + (myTurn ? " mine" : ""),text:status}));
+  if (st.lt && st.ph === "play") tbl.append(h("button",{class:"link",type:"button",onclick:()=>{ showLast = !showLast; render(); },text: showLast ? "Ocultar última baza" : "Ver última baza"}));
+  if (showLast && st.lt && st.ph === "play") tbl.append(h("div",{class:"played"}, st.lt.c.map(([s,cd]) => h("div",{class:"slot" + (s === st.lt.g ? " win" : "")}, cardEl(cd,{cls:"sm"}), h("span",{class:"who",text:name(s)})))));
+  app.append(tbl);
+
+  // Subasta
+  if (st.ph === "auction" && myTurn){
+    const hi = auctionHigh(st), from = hi ? hi.v + 1 : 0;
+    const lastOne = st.ab.filter(x => x === null).length === 1;
+    const mustBid = lastOne && !hi;
+    const opts = []; for (let v = from; v <= c; v++) opts.push(v);
+    app.append(h("div",{class:"panel"},
+      h("h2",{text:"¿Cuántas bazas te comprometes a hacer?"}),
+      h("p",{class:"small muted",text:"Mira tu mano. Quien puje más elige el palo de triunfo y esa puja es lo que pide. " + (hi ? "Tienes que superar " + hi.v + "." : "")}),
+      opts.length ? h("div",{class:"bids"}, opts.map(v => h("button",{type:"button",disabled:!!pending,onclick:()=>act({t:"auc",v,r:st.r}),text:String(v)}))) : null,
+      h("button",{type:"button",disabled: mustBid || !!pending,onclick:()=>act({t:"auc",v:-1,r:st.r}),text:"Paso"}),
+      mustBid ? h("p",{class:"small muted",text:"Han pasado todos, así que tienes que pujar."}) : null));
+  }
+  if (st.ph === "choose" && myTurn){
+    app.append(h("div",{class:"panel"},
+      h("h2",{text:"Elige el palo de triunfo"}),
+      h("div",{class:"row",style:"justify-content:center"}, SUITS.map(s => {
+        const b = h("button",{type:"button",class:"card lg ok","data-s":s,disabled:!!pending,"aria-label":SNAME[s],onclick:()=>act({t:"trump",s,r:st.r})}, h("span",{html:SVG[s]}));
+        return h("div",{style:"display:flex;flex-direction:column;align-items:center;gap:4px"}, b, h("span",{class:"small",text:SNAME[s]}));
+      }))));
+  }
+  // Pedir
+  if (st.ph === "bid" && myTurn){
+    const fb = forbiddenBid(st);
+    app.append(h("div",{class:"panel"},
+      h("h2",{text:"¿Cuántas bazas vas a hacer?"}),
+      h("div",{class:"bids"}, Array.from({length:c+1}, (_,v) => h("button",{type:"button",class: v === 0 ? "" : "",disabled: v === fb || !!pending,onclick:()=>act({t:"bid",v,r:st.r}),text:String(v)}))),
+      fb !== null ? h("p",{class:"small muted",text:"No puedes pedir " + fb + ": la suma daría justo las " + c + " bazas."}) : null));
+  }
+  // Fin de ronda
+  if (st.ph === "roundEnd"){
+    const last = st.hist[st.hist.length-1] || {};
+    const rows = st.seats.map((s,i) => h("tr",null, h("td",{text:name(i)}),
+      h("td",{text: last.b ? last.b[i] + " / " + last.w[i] : ""}),
+      h("td",{class:(last.p && last.p[i] < 0) ? "neg" : "pos",text: last.p ? (last.p[i] > 0 ? "+" : "") + last.p[i] : ""}),
+      h("td",{text:String(st.sc[i])})));
+    const isLast = st.r + 1 >= st.seq.length;
+    app.append(h("div",{class:"panel"},
+      h("h2",{text:"Resultado de la ronda"}),
+      h("div",{class:"scorewrap"}, h("table",{class:"score"}, h("thead",null, h("tr",null, h("th",{text:"Jugador"}), h("th",{text:"Pide / hace"}), h("th",{text:"Ronda"}), h("th",{text:"Total"}))), h("tbody",null, rows))),
+      mine >= 0 ? h("button",{class:"primary",type:"button",disabled:!!pending,onclick:()=>act({t:"next",r:st.r}),text: isLast ? "Ver clasificación final" : "Siguiente ronda (" + st.seq[st.r+1] + (st.seq[st.r+1] === 1 ? " carta)" : " cartas)")}) : null));
+  }
+  // Mano
+  if (mine >= 0 && kind === "i"){
+    const mineCard = st.h[mine];
+    const canPlay = st.ph === "play" && myTurn && !pending && !!mineCard;
+    const back = h("div",{class:"card lg",style:"background:repeating-linear-gradient(45deg,var(--wood) 0 6px,#5c3822 6px 12px);border-color:var(--wood)","aria-label":"Tu carta, boca abajo"});
+    app.append(h("div",{class:"panel"},
+      h("span",{class:"label",text:"Tu carta"}),
+      mineCard ? h("div",{class:"row",style:"justify-content:center"}, back) : h("p",{class:"muted small",text:"Ya la has echado."}),
+      h("p",{class:"small muted",text:"Ronda de indias: ves las cartas de los demás arriba, pero no la tuya."}),
+      canPlay ? h("button",{class:"primary",type:"button",onclick:()=>act({t:"play",c:mineCard,r:st.r}),text:"Echar mi carta"}) : null));
+  } else if (mine >= 0){
+    const hand = sortHand(splitHand(st.h[mine]), st.tr);
+    const canPlay = st.ph === "play" && myTurn && !pending;
+    const legal = canPlay ? legalCards(hand, st.tb, st.tr) : [];
+    const handBox = h("div",{class:"hand"}, hand.map(cd => {
+      const ok = legal.includes(cd);
+      const cls = "lg " + (canPlay ? (ok ? "ok" : "no") : "") + (pending && pending.c === cd ? " sent" : "");
+      const el = cardEl(cd, {button:true, cls});
+      if (canPlay && ok) el.addEventListener("click", () => act({t:"play",c:cd,r:st.r}));
+      else el.disabled = true;
+      return el;
+    }));
+    app.append(h("div",{class:"panel"},
+      h("div",{class:"row",style:"justify-content:space-between"}, h("span",{class:"label",text:"Tu mano"}), canPlay && legal.length < hand.length ? h("span",{class:"small muted",text:"Solo puedes echar las marcadas"}) : null),
+      hand.length ? handBox : h("p",{class:"muted small",text:"No te quedan cartas en esta ronda."})));
+  } else {
+    app.append(h("div",{class:"panel"}, h("p",{class:"muted",text:"La partida ya ha empezado y estás mirando. Si tenías sitio, entra con el mismo nombre que usaste."})));
+  }
+  app.append(h("button",{type:"button",onclick:()=>{ showScores = !showScores; render(); },text: showScores ? "Ocultar anotaciones" : "Ver anotaciones de todas las rondas"}));
+  if (showScores) app.append(scoreTable(st, name));
+}
+function scoreTable(st, name){
+  const full = st.hist.length && st.hist[0].b;
+  return h("div",{class:"panel"}, h("div",{class:"scorewrap"}, h("table",{class:"score"},
+    h("thead",null, h("tr",null, h("th",{text:"Ronda"}), st.seats.map((s,i) => h("th",{text:name(i)})))),
+    h("tbody",null, st.hist.map((r,k) => h("tr",null,
+      h("td",{text:(k+1) + (r.c ? " · " + r.c + (r.t ? " " + SNAME[r.t].slice(0,1).toUpperCase() : "") : "") + (r.k === "s" ? " sub." : r.k === "i" ? " ind." : "")}),
+      r.p.map((p,i) => h("td",null, full ? h("span",{class:"bw",text:r.b[i] + "/" + r.w[i]}) : null, h("span",{class: p < 0 ? "neg" : "pos",text:(p > 0 ? "+" : "") + p})))))),
+    h("tfoot",null, h("tr",null, h("td",{text:"Total"}), st.sc.map(x => h("td",{text:String(x)})))))),
+    full ? h("p",{class:"small muted",text:"Pide/hace y puntos de cada ronda. La letra es el palo de triunfo."}) : null);
+}
+function renderEnd(st){
+  const mine = seatOf(st, myPid);
+  const order = st.seats.map((s,i) => ({i, n: i === mine ? s.n + " (tú)" : s.n, p: st.sc[i]})).sort((a,b) => b.p - a.p);
+  app.append(h("div",{class:"panel"},
+    h("h2",{text: order[0].i === mine ? "¡Has ganado!" : "Gana " + st.seats[order[0].i].n}),
+    h("ol",{class:"podium"}, order.map((o,k) => h("li",null, h("span",{class:"pos",text:String(k+1)}), h("span",{class:"n",text:o.n}), h("span",{class:"p",text:String(o.p)})))),
+    role === "host" ? h("button",{class:"primary",type:"button",onclick:()=>{ S = newState(S); S.seats = S.seats.filter(s => onlinePids().has(s.p) || s.p === myPid); publish(); },text:"Nueva partida con la misma mesa"}) : h("p",{class:"muted small",text:"El anfitrión puede empezar otra partida."})));
+  app.append(scoreTable(st, i => i === mine ? "Tú" : st.seats[i].n));
+}
+
+})();
+</script>
+</body>
+</html>
